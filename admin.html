@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BSC Edu Hub | Admin Panel</title>
+<link rel="icon" href="assets/bsc-edu-hub-logo.png"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header"><div class="container nav">
+  <a class="brand" href="index.html"><img src="assets/bsc-edu-hub-logo.png" alt="BSC Edu Hub"><span><b>BSC</b> Edu Hub</span></a>
+  <div class="nav-actions"><a class="ghost" href="student.html">Student Portal</a><a class="ghost" href="index.html">Website</a></div>
+</div></header>
+
+<main class="section"><div class="container">
+<div id="adminLogin" class="admin-login">
+  <div class="portal-card">
+    <span class="eyebrow">Management</span><h1>Admin Panel</h1>
+    <p class="muted">Manage study material, test series and student IDs.</p>
+    <label>Admin Password<input id="adminPassword" type="password" placeholder="Demo password"></label>
+    <button class="btn primary full" id="adminLoginBtn">Login to Admin</button>
+    <p id="adminLoginMsg" class="form-msg"></p>
+    <div class="notice"><b>Demo password:</b> <code>admin123</code><br>For a live site, replace this with Supabase Auth + role-based access. A browser-only password is not secure.</div>
+  </div>
+</div>
+
+<div id="adminApp" class="hidden">
+  <div class="admin-header"><div><span class="eyebrow">Management</span><h1>Admin Dashboard</h1><p class="muted">BSC Edu Hub • Sikar</p></div><div><span class="status">● Demo Mode</span><button class="btn secondary" id="adminLogout">Logout</button></div></div>
+
+  <div class="stats" id="stats"></div>
+  <div class="admin-grid">
+    <aside class="admin-side">
+      <button class="side active" data-panel="dashboard">Dashboard</button>
+      <button class="side" data-panel="materials">Materials</button>
+      <button class="side" data-panel="tests">Test Series</button>
+      <button class="side" data-panel="students">Students</button>
+      <button class="side" data-panel="orders">Orders</button>
+    </aside>
+    <section class="admin-content" id="adminContent"></section>
+  </div>
+</div>
+</div></main>
+<footer><div class="container copyright">© 2026 BSC Edu Hub • Admin</div></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const defaultMaterials=[
+{id:1,title:"Physics Notes — B.Sc. 3rd Sem",cat:"Notes",sub:"Physics",icon:"⚛️",price:99},
+{id:2,title:"Physics Practical File",cat:"Practical Files",sub:"Physics",icon:"📄",price:99},
+{id:3,title:"Physics Exam Guess Paper",cat:"Guess Papers",sub:"Physics",icon:"🎯",price:99},
+{id:4,title:"Chemistry Notes — B.Sc. 3rd Sem",cat:"Notes",sub:"Chemistry",icon:"🧪",price:99},
+{id:5,title:"Chemistry Practical File",cat:"Practical Files",sub:"Chemistry",icon:"📄",price:99},
+{id:6,title:"Chemistry Exam Guess Paper",cat:"Guess Papers",sub:"Chemistry",icon:"🎯",price:99},
+{id:7,title:"Mathematics Notes — B.Sc. 3rd Sem",cat:"Notes",sub:"Mathematics",icon:"➗",price:99},
+{id:8,title:"Mathematics Exam Guess Paper",cat:"Guess Papers",sub:"Mathematics",icon:"🎯",price:99},
+{id:9,title:"Biology Notes — B.Sc. 3rd Sem",cat:"Notes",sub:"Biology",icon:"🧬",price:99},
+{id:10,title:"Biology Practical File",cat:"Practical Files",sub:"Biology",icon:"📄",price:99},
+{id:11,title:"Biology Exam Guess Paper",cat:"Guess Papers",sub:"Biology",icon:"🎯",price:99}];
+const defaultTests=["Physics","Chemistry","Mathematics","Biology"].map((s,i)=>({id:100+i,title:`${s} Test Series`,sub:s,price:99,questions:0}));
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||"null")||d}catch(e){return d}};
+let materials=read("bsc_materials",defaultMaterials), tests=read("bsc_tests",defaultTests);
+
+function persist(){localStorage.setItem("bsc_materials",JSON.stringify(materials));localStorage.setItem("bsc_tests",JSON.stringify(tests));}
+function refreshStats(){
+  $("stats").innerHTML=`<div><b>${materials.length}</b><span>Material products</span></div><div><b>${tests.length}</b><span>Test series</span></div><div><b>${read("bsc_students",[]).length}</b><span>Student IDs</span></div><div><b>₹99</b><span>Default price</span></div>`;
+}
+function setPanel(k){
+  document.querySelectorAll(".side").forEach(b=>b.classList.toggle("active",b.dataset.panel===k));
+  if(k==="dashboard") dashboard();
+  if(k==="materials") materialPanel();
+  if(k==="tests") testPanel();
+  if(k==="students") studentPanel();
+  if(k==="orders") orderPanel();
+}
+function dashboard(){
+  $("adminContent").innerHTML=`<div class="admin-note"><h3>Welcome to BSC Edu Hub Admin</h3><p>Use the left menu to add materials, create test series and manage Student IDs. Changes in demo mode are saved in this browser using localStorage.</p></div>
+  <div class="quick-actions"><button class="btn primary" onclick="setPanel('materials');openMaterialForm()">＋ Add Material</button><button class="btn secondary" onclick="setPanel('tests');openTestForm()">＋ Create Test</button><button class="btn secondary" onclick="setPanel('students');openStudentForm()">＋ Create Student ID</button></div>`;
+}
+function materialPanel(){
+  $("adminContent").innerHTML=`<div class="admin-title"><div><h3>Material Manager</h3><p class="muted">Add Notes, Practical Files or Guess Papers.</p></div><button class="btn primary" onclick="openMaterialForm()">＋ Add Material</button></div>
+  <div id="materialForm" class="form-card hidden"></div>
+  <div class="table"><div class="tr tr-material th"><span>Product</span><span>Category</span><span>Subject</span><span>Price</span><span>Action</span></div>
+  ${materials.map(p=>`<div class="tr tr-material"><span>${p.icon||"📄"} ${p.title}</span><span>${p.cat}</span><span>${p.sub}</span><b>₹${p.price||99}</b><button class="btn small" onclick="deleteMaterial(${p.id})">Delete</button></div>`).join("")}</div>`;
+}
+function openMaterialForm(){
+  const box=$("materialForm"); if(!box)return;
+  box.classList.remove("hidden");
+  box.innerHTML=`<h3>Add New Material</h3><div class="form-grid">
+  <label>Title<input id="mTitle" placeholder="e.g. Physics Unit 1 Notes"></label>
+  <label>Subject<select id="mSub"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Biology</option></select></label>
+  <label>Category<select id="mCat"><option>Notes</option><option>Practical Files</option><option>Guess Papers</option></select></label>
+  <label>Price<input id="mPrice" type="number" value="99"></label>
+  <label>File / PDF URL<input id="mFile" placeholder="Optional — connect Supabase Storage later"></label></div>
+  <div class="form-actions"><button class="btn primary" onclick="saveMaterial()">Save Material</button><button class="btn secondary" onclick="box.classList.add('hidden')">Cancel</button></div>`;
+}
+function saveMaterial(){
+  const title=$("mTitle").value.trim(); if(!title){alert("Material title required.");return;}
+  const p={id:Date.now(),title,sub:$("mSub").value,cat:$("mCat").value,price:Number($("mPrice").value)||99,icon:$("mCat").value==="Notes"?"📚":$("mCat").value==="Practical Files"?"📄":"🎯",file:$("mFile").value.trim()};
+  materials.unshift(p);persist();refreshStats();materialPanel();
+}
+function deleteMaterial(id){if(confirm("Delete this material?")){materials=materials.filter(x=>x.id!==id);persist();refreshStats();materialPanel();}}
+
+function testPanel(){
+  $("adminContent").innerHTML=`<div class="admin-title"><div><h3>Test Series Manager</h3><p class="muted">Create a test series now; MCQ builder can be connected to Supabase later.</p></div><button class="btn primary" onclick="openTestForm()">＋ Create Test</button></div>
+  <div id="testForm" class="form-card hidden"></div>
+  <div class="table"><div class="tr tr-test th"><span>Test</span><span>Subject</span><span>Questions</span><span>Price</span><span>Action</span></div>
+  ${tests.map(t=>`<div class="tr tr-test"><span>📝 ${t.title}</span><span>${t.sub}</span><span>${t.questions||0}</span><b>₹${t.price||99}</b><button class="btn small" onclick="deleteTest(${t.id})">Delete</button></div>`).join("")}</div>`;
+}
+function openTestForm(){
+  const box=$("testForm"); if(!box)return;
+  box.classList.remove("hidden");
+  box.innerHTML=`<h3>Create Test Series</h3><div class="form-grid">
+  <label>Title<input id="tTitle" placeholder="e.g. Physics Mid Semester Test"></label>
+  <label>Subject<select id="tSub"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Biology</option></select></label>
+  <label>Price<input id="tPrice" type="number" value="99"></label>
+  <label>Timer (minutes)<input id="tTime" type="number" value="30"></label></div>
+  <div class="form-actions"><button class="btn primary" onclick="saveTest()">Create Test</button><button class="btn secondary" onclick="box.classList.add('hidden')">Cancel</button></div>`;
+}
+function saveTest(){
+  const title=$("tTitle").value.trim(); if(!title){alert("Test title required.");return;}
+  tests.unshift({id:Date.now(),title,sub:$("tSub").value,price:Number($("tPrice").value)||99,timer:Number($("tTime").value)||30,questions:0});
+  persist();refreshStats();testPanel();
+}
+function deleteTest(id){if(confirm("Delete this test?")){tests=tests.filter(x=>x.id!==id);persist();refreshStats();testPanel();}}
+
+function studentPanel(){
+  const students=read("bsc_students",[]);
+  $("adminContent").innerHTML=`<div class="admin-title"><div><h3>Student ID Manager</h3><p class="muted">Create and view student IDs in this demo browser.</p></div><button class="btn primary" onclick="openStudentForm()">＋ Create Student ID</button></div>
+  <div id="studentForm" class="form-card hidden"></div>
+  <div class="table"><div class="tr tr-student th"><span>Name</span><span>Student ID</span><span>Mobile</span><span>Created</span><span>Action</span></div>
+  ${students.length?students.map(s=>`<div class="tr tr-student"><span>${s.name}</span><b>${s.id}</b><span>${s.mobile}</span><span>${new Date(s.created).toLocaleDateString()}</span><button class="btn small" onclick="deleteStudent('${s.id}')">Delete</button></div>`).join(""):`<div class="empty">No Student IDs yet.</div>`}</div>`;
+}
+function openStudentForm(){
+  const box=$("studentForm"); if(!box)return;
+  box.classList.remove("hidden");
+  box.innerHTML=`<h3>Create Student ID</h3><div class="form-grid"><label>Name<input id="sName" placeholder="Student name"></label><label>Mobile<input id="sMobile" maxlength="10" placeholder="10-digit mobile"></label></div><div class="form-actions"><button class="btn primary" onclick="saveStudent()">Create ID</button><button class="btn secondary" onclick="box.classList.add('hidden')">Cancel</button></div>`;
+}
+function saveStudent(){
+  const name=$("sName").value.trim(),mobile=$("sMobile").value.replace(/\D/g,""); if(!name||mobile.length!==10){alert("Enter name and valid mobile.");return;}
+  const students=read("bsc_students",[]); if(students.some(s=>s.mobile===mobile)){alert("This mobile already has a Student ID.");return;}
+  students.push({id:"BSC-"+String(students.length+1).padStart(4,"0"),name,mobile,created:new Date().toISOString()});
+  localStorage.setItem("bsc_students",JSON.stringify(students));refreshStats();studentPanel();
+}
+function deleteStudent(id){if(confirm("Delete this Student ID?")){localStorage.setItem("bsc_students",JSON.stringify(read("bsc_students",[]).filter(s=>s.id!==id)));refreshStats();studentPanel();}}
+function orderPanel(){
+  $("adminContent").innerHTML=`<div class="admin-title"><div><h3>Orders & Payments</h3><p class="muted">Real payment verification will be connected server-side.</p></div></div><div class="empty">No real orders in demo mode.<br><small>Production: UPI gateway → webhook → verified order → unlock material.</small></div>`;
+}
+
+$("adminLoginBtn").onclick=()=>{
+  if($("adminPassword").value==="admin123"){sessionStorage.setItem("bsc_admin","1");showAdmin();}
+  else $("adminLoginMsg").textContent="Wrong password.";
+};
+$("adminLogout").onclick=()=>{sessionStorage.removeItem("bsc_admin");location.reload();};
+document.querySelectorAll(".side").forEach(b=>b.onclick=()=>setPanel(b.dataset.panel));
+function showAdmin(){$("adminLogin").classList.add("hidden");$("adminApp").classList.remove("hidden");refreshStats();setPanel("dashboard");}
+if(sessionStorage.getItem("bsc_admin")==="1")showAdmin();
+</script>
+</body></html>

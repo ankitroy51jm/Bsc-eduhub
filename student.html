@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BSC Edu Hub | Student Portal</title>
+<link rel="icon" href="assets/bsc-edu-hub-logo.png"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header"><div class="container nav">
+  <a class="brand" href="index.html"><img src="assets/bsc-edu-hub-logo.png" alt="BSC Edu Hub"><span><b>BSC</b> Edu Hub</span></a>
+  <div class="nav-actions"><a class="ghost" href="index.html">Website</a><a class="admin-pill" href="admin.html">Admin Panel</a></div>
+</div></header>
+
+<main class="section"><div class="container">
+<div class="portal-layout">
+  <section class="portal-card">
+    <span class="eyebrow">Student Portal</span>
+    <h1>Login to your account.</h1>
+    <p class="muted">Use your mobile number and Student ID to access your library.</p>
+    <div class="tabs"><button class="tab active" id="loginTab">Login</button><button class="tab" id="createTab">Create Student ID</button></div>
+
+    <div id="loginPane">
+      <label>Mobile Number<input id="mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></label>
+      <label>Student ID (optional)<input id="sid" placeholder="e.g. BSC-0001"></label>
+      <button class="btn primary full" id="loginBtn">Login</button>
+      <p id="msg" class="form-msg"></p>
+    </div>
+
+    <div id="createPane" class="hidden">
+      <label>Student Name<input id="name" placeholder="Full name"></label>
+      <label>Mobile Number<input id="newMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></label>
+      <button class="btn primary full" id="createBtn">Create Student ID</button>
+      <p id="createMsg" class="form-msg"></p>
+    </div>
+
+    <div class="notice"><b>Demo mode:</b> Student IDs are saved in this browser. Real OTP, accounts and purchases will be connected with Supabase before launch.</div>
+  </section>
+
+  <aside class="portal-card account-card">
+    <span class="eyebrow">My Account</span>
+    <div id="accountState">
+      <div class="empty">Login first to see your student account.</div>
+    </div>
+  </aside>
+</div>
+
+<section class="section" style="padding-bottom:0">
+  <div class="section-head"><div><span class="eyebrow">My Library</span><h2>Purchased Material</h2></div></div>
+  <div class="product-grid">
+    <article class="product-card"><div class="product-icon">📚</div><span class="tag">Locked</span><h3>Your purchased notes will appear here</h3><p>Verified purchases will unlock protected online viewing.</p></article>
+    <article class="product-card"><div class="product-icon">📝</div><span class="tag">Tests</span><h3>Your test series</h3><p>Attempt purchased tests and view your results.</p></article>
+  </div>
+</section>
+</div></main>
+<footer><div class="container copyright">Need help? 7891948511 • Sikar, Rajasthan</div></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const getStudents=()=>{try{return JSON.parse(localStorage.getItem("bsc_students")||"[]")}catch(e){return[]}};
+const saveStudents=x=>localStorage.setItem("bsc_students",JSON.stringify(x));
+function switchTab(create){
+  $("loginTab").classList.toggle("active",!create); $("createTab").classList.toggle("active",create);
+  $("loginPane").classList.toggle("hidden",create); $("createPane").classList.toggle("hidden",!create);
+}
+$("loginTab").onclick=()=>switchTab(false); $("createTab").onclick=()=>switchTab(true);
+
+$("createBtn").onclick=()=>{
+  const name=$("name").value.trim(), mobile=$("newMobile").value.replace(/\D/g,"");
+  if(!name || mobile.length!==10){$("createMsg").textContent="Enter name and valid 10-digit mobile number.";return;}
+  const students=getStudents();
+  const existing=students.find(s=>s.mobile===mobile);
+  if(existing){$("createMsg").textContent=`Student ID already exists: ${existing.id}`;return;}
+  const id="BSC-"+String(students.length+1).padStart(4,"0");
+  students.push({id,name,mobile,created:new Date().toISOString()}); saveStudents(students);
+  $("createMsg").textContent=`Student ID created: ${id}`;
+  $("mobile").value=mobile; $("sid").value=id; switchTab(false);
+};
+
+$("loginBtn").onclick=()=>{
+  const mobile=$("mobile").value.replace(/\D/g,""), sid=$("sid").value.trim().toUpperCase();
+  const student=getStudents().find(s=>s.mobile===mobile && (!sid || s.id===sid));
+  if(!student){$("msg").textContent="Student not found. Create a Student ID first.";return;}
+  localStorage.setItem("bsc_current_student",JSON.stringify(student));
+  $("msg").textContent="Login successful.";
+  $("accountState").innerHTML=`<div class="account-profile"><div class="account-avatar">${student.name.charAt(0).toUpperCase()}</div><div><h3>${student.name}</h3><p>Student ID: <b>${student.id}</b></p><p>Mobile: ${student.mobile}</p></div></div><button class="btn secondary full" onclick="logout()">Logout</button>`;
+};
+function logout(){localStorage.removeItem("bsc_current_student");location.reload();}
+const current=JSON.parse(localStorage.getItem("bsc_current_student")||"null");
+if(current){
+  $("accountState").innerHTML=`<div class="account-profile"><div class="account-avatar">${current.name.charAt(0).toUpperCase()}</div><div><h3>${current.name}</h3><p>Student ID: <b>${current.id}</b></p><p>Mobile: ${current.mobile}</p></div></div><button class="btn secondary full" onclick="logout()">Logout</button>`;
+}
+if(location.hash==="#create") switchTab(true);
+</script>
+</body></html>
