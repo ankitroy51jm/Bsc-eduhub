@@ -40,3 +40,10 @@ For a real public launch:
 7. Replace demo admin password with real role-based authentication
 
 The current static version is intentionally safe for GitHub Pages testing: the demo admin password is NOT secure for a real production admin panel.
+
+
+## v5 fixes
+- Logo is now `assets/logo.png` and is directly referenced by all three pages.
+- Main website navigation visibly includes **Student Login** and **Admin Panel**.
+- `admin.html` is a standalone Admin Dashboard page with its own login screen.
+- `styles.css` and `app.js` are included in the ZIP.

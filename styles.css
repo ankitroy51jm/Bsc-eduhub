@@ -30,3 +30,9 @@
 code{background:#eef2f7;padding:2px 5px;border-radius:5px}
 @media(max-width:850px){.editor-card,.portal-layout{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.tr-material,.tr-test,.tr-student{min-width:720px}}
 @media(max-width:560px){.editor-copy h2,.portal-card h1,.admin-login h1{font-size:32px}.editor-card{padding:24px}}
+
+/* v5: reliable logo + admin navigation */
+.brand{display:flex!important;align-items:center!important;gap:10px!important;text-decoration:none!important}
+.brand img{display:block!important;width:46px!important;height:46px!important;object-fit:contain!important;border-radius:10px!important}
+.site-header .nav-actions{display:flex!important;align-items:center!important;gap:10px!important}
+.admin-pill{display:inline-flex!important;align-items:center!important;justify-content:center!important;text-decoration:none!important}
